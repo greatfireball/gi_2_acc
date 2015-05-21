@@ -30,7 +30,7 @@ if ($inputfile =~ /\.gz|\.bz2/)
 }
 
 # I want to work on blocks of maximum $max_ids_per_block gis
-my $max_ids_per_block = 1000;
+my $max_ids_per_block = 500;
 
 # prepare the output file
 my $outfile;
