@@ -61,7 +61,28 @@ while (<$infile>)
 	my $url = $base . "efetch.fcgi?db=nucleotide&id=$gilist&rettype=acc";
 
 	#post the URL
-	my @accs = split(/\r*\n/, get($url));
+	my $content = get($url);
+	# check error and redo in this case for 5 times
+	unless ($content)
+	{
+	    my $num_retries = 1;
+	    my $wait_value = rand(30);
+	    while($num_retries <= 5)
+	    {
+		printf STDERR "\rError during retrievment of accessions. Waiting for %d seconds and retrying for the %d time", $wait_value, $num_retries;
+		sleep($wait_value);
+		$content = get($url);
+		last if ($content);
+
+		$wait_value = rand(30);
+		$num_retries++;
+	    }
+	    if ($num_retries > 5 && ! defined $content)
+	    {
+		die "Was not able to retrieve the following URL: '$url'";
+	    }
+	}
+	my @accs = split(/\r*\n/, $content);
 
 	# check if both lists have the same length
 	if (@accs != @block)
