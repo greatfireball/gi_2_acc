@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
 
+# the idea for that tool is based on the example code from NCBI:
+# http://www.ncbi.nlm.nih.gov/books/NBK25498/#chapter3.Application_1_Converting_GI_num
+
 use strict;
 use warnings;
 
@@ -41,6 +44,8 @@ if ($outputfile ne "-")
 # generate a comma seperated list of gis
 my $gilist;
 my @block = ();
+my $num_finished = 0;
+
 while (<$infile>)
 {
     chomp($_);
@@ -68,9 +73,15 @@ while (<$infile>)
 	    printf $outfile "%s\t%s\n", $block[$i], $accs[$i];
 	}
 
+	$num_finished += @block;
+
+	printf STDERR "\rFinished % 7d sequences", $num_finished;
+
 	@block = ();
     }
 }
+
+printf STDERR "\rFinished complete set with %d sequences\n", $num_finished;
 
 close($outfile) || die "Unable to close the output file '$outputfile': $!";
 
