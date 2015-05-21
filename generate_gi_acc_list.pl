@@ -24,20 +24,24 @@ if ($inputfile =~ /\.gz|\.bz2/)
     open($infile, "<", $inputfile) || die "Unable to open input file '$inputfile': $!";
 }
 
+# I want to work on blocks of maximum $max_ids_per_block gis
+my $max_ids_per_block = 1000;
+
 # generate a comma seperated list of gis
 my $gilist;
+my @block = ();
 while (<$infile>)
 {
     chomp($_);
 
-    # check if we have to add a ',' before adding a new gi
-    if ($gilist)
-    {
-	$gilist .= ",";
-    }
+    push(@block, $_+0);
 
-    # add the gi
-    $gilist .= $_;
+    if (@block >= $max_ids_per_block || eof($infile))
+    {
+	my $gilist = join(",", @block);
+	print $gilist;
+
+	@block = ();
+    }
 }
 
-print $gilist;
