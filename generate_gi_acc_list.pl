@@ -12,10 +12,13 @@ use Getopt::Long;
 
 my $inputfile = "input.txt";
 my $outputfile = "output.txt";
+my $start_at = 0;
+
 
 GetOptions(
     'i|in|inputfile=s' => \$inputfile,
-    'o|out|outputfile=s' => \$outputfile
+    'o|out|outputfile=s' => \$outputfile,
+    'f|from=i' => \$start_at,
     );
 
 my $infile; # variable to store the input filehandle
@@ -44,7 +47,25 @@ if ($outputfile ne "-")
 # generate a comma seperated list of gis
 my $gilist;
 my @block = ();
-my $num_finished = 0;
+
+if ($start_at > 0)
+{
+    # if the start at parameter is given, I have to skip the same
+    # number of lines
+    my $skipped = 0;
+    while (<$infile>)
+    {
+	$skipped++;
+
+	if ($skipped == $start_at)
+	{
+	    printf STDERR "Skipped %d sequences\n", $skipped;
+	    last;
+	}
+    }
+}
+
+my $num_finished = $start_at;
 
 while (<$infile>)
 {
