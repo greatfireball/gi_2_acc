@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use LWP::Simple;
+
 use Getopt::Long;
 
 my $inputfile = "input.txt";
@@ -27,6 +29,15 @@ if ($inputfile =~ /\.gz|\.bz2/)
 # I want to work on blocks of maximum $max_ids_per_block gis
 my $max_ids_per_block = 1000;
 
+# prepare the output file
+my $outfile;
+if ($outputfile ne "-")
+{
+    open($outfile, ">", $outputfile) || die "Unable to open input file '$inputfile': $!";
+} else {
+    $outfile = \*STDOUT;
+}
+
 # generate a comma seperated list of gis
 my $gilist;
 my @block = ();
@@ -39,9 +50,27 @@ while (<$infile>)
     if (@block >= $max_ids_per_block || eof($infile))
     {
 	my $gilist = join(",", @block);
-	print $gilist;
+
+	#assemble the URL
+	my $base = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/';
+	my $url = $base . "efetch.fcgi?db=nucleotide&id=$gilist&rettype=acc";
+
+	#post the URL
+	my @accs = split(/\r*\n/, get($url));
+
+	# check if both lists have the same length
+	if (@accs != @block)
+	{
+	    die "Different length of input and output list";
+	}
+	for(my $i=0; $i<@block; $i++)
+	{
+	    printf $outfile "%s\t%s\n", $block[$i], $accs[$i];
+	}
 
 	@block = ();
     }
 }
+
+close($outfile) || die "Unable to close the output file '$outputfile': $!";
 
